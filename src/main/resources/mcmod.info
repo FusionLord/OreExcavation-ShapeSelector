@@ -1,0 +1,16 @@
+[
+{
+  "modid": "oeshapeselector",
+  "name": "OreExcavation: Shape Selector",
+  "description": "Adds a quick switch menu for easier switching of shapes in Ore Excavation.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["FusionLord"],
+  "credits": "FusionLord for the idea and implementation.",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
