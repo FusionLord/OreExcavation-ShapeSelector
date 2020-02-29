@@ -4,14 +4,18 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.fusionlord.mods.oreexcavation.shapeselector.ShapeSelector;
 import net.fusionlord.mods.oreexcavation.shapeselector.screens.components.GuiSliderInt;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.common.Tags;
 import oreexcavation.client.ExcavationKeys;
 import oreexcavation.client.GuiEditShapes;
 import oreexcavation.shapes.ExcavateShape;
@@ -25,6 +29,8 @@ public class ShapeSelectionScreen extends Screen {
     private Collection<Widget> sliderParts;
     private ShapeRegistry registry;
     private int cooldown;
+
+    private static final ResourceLocation SPRITE_STONE = new ResourceLocation("minecraft:block/stone");
 
     public ShapeSelectionScreen() {
         super(new StringTextComponent("Shape Selection!"));
@@ -89,10 +95,12 @@ public class ShapeSelectionScreen extends Screen {
 
             fill(-1, -1, 161, 161, Color.WHITE.getRGB());
             fill(0, 0, 160, 160, Color.BLACK.getRGB());
-            GlStateManager.color3f(1, 1, 1);
+            GlStateManager.color4f(1, 1, 1, 1);
 
             int mask = shape.getShapeMask();
             int off = shape.getReticle();
+
+            TextureAtlasSprite sprite = minecraft.getAtlasSpriteGetter(AtlasTexture.LOCATION_BLOCKS_TEXTURE).apply(SPRITE_STONE);
 
             GlStateManager.translatef(160, 160, 0);
             for(int x = 0; x < 5; ++x)
@@ -106,7 +114,7 @@ public class ShapeSelectionScreen extends Screen {
                         GlStateManager.pushMatrix();
                         GlStateManager.scalef(-2.0F, -2.0F, 0F);
                         GlStateManager.translatef((float) (x * 16), (float) (y * 16), 0.0F);
-                        blit(0, 0, 100, 16, 16, minecraft.getTextureMap().getAtlasSprite("minecraft:block/stone"));
+                        blit(0, 0, 100, 16, 16, sprite);
                         GlStateManager.popMatrix();
                     }
 
@@ -137,7 +145,7 @@ public class ShapeSelectionScreen extends Screen {
         if (ExcavationKeys.shapeKey.matchesKey(key, scancode)) {
             if (registry.getActiveShape() != null)
                 registry.getActiveShape().setMaxDepth(ShapeSelector.depth);
-//            minecraft.displayGuiScreen(null);
+            minecraft.displayGuiScreen(null);
             return true;
         }
         return false;
