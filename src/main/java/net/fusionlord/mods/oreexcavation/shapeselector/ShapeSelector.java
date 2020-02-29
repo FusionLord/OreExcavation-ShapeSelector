@@ -8,6 +8,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
@@ -44,10 +45,11 @@ public class ShapeSelector
         ClientRegistry.registerKeyBinding(shapeSelector);
         MinecraftForge.EVENT_BUS.register(this);
         curShape = ReflectionHelper.findField(ShapeRegistry.class, "curShape");
-        Minecraft.getMinecraft().gameSettings.keyBindings = ArrayUtils.remove(Minecraft.getMinecraft().gameSettings.keyBindings, ArrayUtils.indexOf(Minecraft.getMinecraft().gameSettings.keyBindings, ExcavationKeys.shapeKey));
+        KeyBinding[] keybinds = Minecraft.getMinecraft().gameSettings.keyBindings;
+        Minecraft.getMinecraft().gameSettings.keyBindings = ArrayUtils.remove(keybinds, ArrayUtils.indexOf(keybinds, ExcavationKeys.shapeKey));
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onKeyPressed(InputEvent event)
     {
         if(shapeSelector.isPressed() && Minecraft.getMinecraft().currentScreen == null)

@@ -56,7 +56,7 @@ public class GuiSliderInt extends GuiSlider {
     }
 
     private void renderText(Minecraft mc, GuiButton component) {
-        int color = !enabled ? 10526880 : (hovered ? 16777120 : -1);
+        int color = !enabled ? 10526880 : (visible ? 16777120 : -1);
         String buttonText = component.displayString;
         int strWidth = mc.fontRenderer.getStringWidth(buttonText);
         int ellipsisWidth = mc.fontRenderer.getStringWidth("...");
@@ -71,7 +71,7 @@ public class GuiSliderInt extends GuiSlider {
 
     @Override
     protected void mouseDragged(Minecraft mc, int mouseX, int mouseY) {
-        if (!visible)
+        if (!enabled)
             return;
 
         if (dragging) {
@@ -83,7 +83,7 @@ public class GuiSliderInt extends GuiSlider {
 
     private void drawBorderedRect(int x, int y, int width, int height) {
         drawRect(x, y, x + width, y + height, colorSliderBackground);
-        drawRect(++x, ++y, x + width - 2, y + height - 2, colorSlider); 
+        drawRect(++x, ++y, x + width - 2, y + height - 2, colorSlider);
     }
 
     public Collection<GuiButton> getComponents() {

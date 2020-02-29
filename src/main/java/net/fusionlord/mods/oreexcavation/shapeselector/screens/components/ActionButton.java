@@ -2,11 +2,6 @@ package net.fusionlord.mods.oreexcavation.shapeselector.screens.components;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureMap;
-import oreexcavation.client.GuiEditShapes;
-import oreexcavation.shapes.ExcavateShape;
 
 import java.util.function.Predicate;
 

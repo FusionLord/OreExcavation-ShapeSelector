@@ -1,14 +1,14 @@
 [
 {
-  "modid": "oeshapeselector",
-  "name": "OreExcavation: Shape Selector",
-  "description": "Adds a quick switch menu for easier switching of shapes in Ore Excavation.",
+  "modid": "examplemod",
+  "name": "Example Mod",
+  "description": "Example placeholder mod.",
   "version": "${version}",
   "mcversion": "${mcversion}",
   "url": "",
   "updateUrl": "",
-  "authorList": ["FusionLord"],
-  "credits": "FusionLord for the idea and implementation.",
+  "authorList": ["ExampleDude"],
+  "credits": "The Forge and FML guys, for making this example",
   "logoFile": "",
   "screenshots": [],
   "dependencies": []
