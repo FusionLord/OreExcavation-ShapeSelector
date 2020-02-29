@@ -99,6 +99,7 @@ curseforge {
     project {
         id = '365014'
         changelog = file("CHANGELOG.md")
+        changelogType = markdown
         releaseType = 'release'
         addGameVersion '1.15.2'
         relations {
