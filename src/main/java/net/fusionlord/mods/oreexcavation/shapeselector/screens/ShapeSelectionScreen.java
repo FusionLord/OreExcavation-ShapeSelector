@@ -137,7 +137,7 @@ public class ShapeSelectionScreen extends Screen {
         if (ExcavationKeys.shapeKey.matchesKey(key, scancode)) {
             if (registry.getActiveShape() != null)
                 registry.getActiveShape().setMaxDepth(ShapeSelector.depth);
-//            minecraft.displayGuiScreen(null);
+            minecraft.displayGuiScreen(null);
             return true;
         }
         return false;
