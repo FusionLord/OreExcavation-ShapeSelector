@@ -126,7 +126,8 @@ public class ShapeSelectionScreen extends Screen {
             drawCenteredString(font, I18n.format(ShapeSelector.MODID + ".noshape"), width / 2, height / 2, Color.WHITE.getRGB());
         }
 
-        drawCenteredString(font, I18n.format(ShapeSelector.MODID + ".tip"), width / 2, height - 40, Color.YELLOW.getRGB());
+        drawCenteredString(font, I18n.format(ShapeSelector.MODID + ".tip"), width / 2, height - 60, Color.YELLOW.getRGB());
+        drawCenteredString(font, I18n.format(ShapeSelector.MODID + ".warn"), width / 2, height - 40, Color.YELLOW.getRGB());
 
         super.render(mx, my, partialTicks);
     }
