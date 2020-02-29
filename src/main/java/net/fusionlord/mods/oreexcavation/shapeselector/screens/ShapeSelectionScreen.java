@@ -1,48 +1,48 @@
 package net.fusionlord.mods.oreexcavation.shapeselector.screens;
 
 import com.google.common.collect.ImmutableSet;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.fusionlord.mods.oreexcavation.shapeselector.ShapeSelector;
-import net.fusionlord.mods.oreexcavation.shapeselector.screens.components.ActionButton;
 import net.fusionlord.mods.oreexcavation.shapeselector.screens.components.GuiSliderInt;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.StringTextComponent;
+import oreexcavation.client.ExcavationKeys;
 import oreexcavation.client.GuiEditShapes;
 import oreexcavation.shapes.ExcavateShape;
 import oreexcavation.shapes.ShapeRegistry;
-import org.lwjgl.input.Mouse;
 
 import java.awt.*;
 import java.util.Collection;
 
-public class ShapeSelectionScreen extends GuiScreen {
+public class ShapeSelectionScreen extends Screen {
     private GuiSliderInt slider;
-    private Collection<GuiButton> sliderParts;
+    private Collection<Widget> sliderParts;
     private ShapeRegistry registry;
     private int cooldown;
 
+    public ShapeSelectionScreen() {
+        super(new StringTextComponent("Shape Selection!"));
+    }
+
     @Override
-    public void initGui() {
-        super.initGui();
+    public void init() {
+        super.init();
 
         registry = ShapeRegistry.INSTANCE;
 
-        addButton(new ActionButton(buttonList.size(), width / 2 - 105, height - 30, 100, 20, I18n.format(ShapeSelector.MODID + ".editshapes"), send -> {
-            if (send) mc.displayGuiScreen(new GuiEditShapes());
-            return false;
+        addButton(new Button(width / 2 - 105, height - 30, 100, 20, I18n.format(ShapeSelector.MODID + ".editshapes"), button -> {
+            minecraft.displayGuiScreen(new GuiEditShapes());
         }));
 
-        addButton(new ActionButton(buttonList.size(), width / 2 + 5, height - 30, 100, 20, I18n.format(ShapeSelector.MODID + ".noshape"), send -> {
-            if (send) {
+        addButton(new Button(width / 2 + 5, height - 30, 100, 20, I18n.format(ShapeSelector.MODID + ".noshape"), send -> {
                 ShapeSelector.setShape(0);
                 sliderParts.forEach(c -> c.visible = false);
-            }
-            return false;
         }));
 
         slider = new GuiSliderInt(
@@ -58,13 +58,14 @@ public class ShapeSelectionScreen extends GuiScreen {
                     false,
                     true,
                     Color.DARK_GRAY,
-                    slider -> ShapeSelector.depth = slider.getValueInt(),
+                    slider -> ShapeSelector.depth = ((GuiSliderInt)slider).getValueInt(),
                     (slider, amount) -> {
                         int value = slider.getValueInt();
                         int valueNew = MathHelper.clamp(value + amount, 1, 32);
                         slider.setValue(valueNew);
                         slider.updateSlider();
-                    }
+                    },
+                    minecraft
                 );
         slider.precision = 1;
         (sliderParts = slider.getComponents()).forEach(this::addButton);
@@ -73,27 +74,27 @@ public class ShapeSelectionScreen extends GuiScreen {
     }
 
     @Override
-    public void drawScreen(int mx, int my, float partialTicks) {
-        this.drawDefaultBackground();
+    public void render(int mx, int my, float partialTicks) {
+        this.renderBackground();
         ExcavateShape shape = registry.getActiveShape();
 
-        drawCenteredString(mc.fontRenderer, I18n.format(ShapeSelector.MODID + ".title"), width / 2,  10, Color.WHITE.getRGB());
+        drawCenteredString(font, I18n.format(ShapeSelector.MODID + ".title"), width / 2,  10, Color.WHITE.getRGB());
 
         if (shape != null) {
             GlStateManager.pushMatrix();
-            GlStateManager.translate(width / 2f - 80, height / 2f - 80, 0f);
+            GlStateManager.translatef(width / 2f - 80, height / 2f - 80, 0f);
             if (!slider.visible) sliderParts.forEach(c -> c.visible = true);
 
-            drawCenteredString(mc.fontRenderer, shape.getName(), 80, -11, Color.WHITE.getRGB());
+            drawCenteredString(font, shape.getName(), 80, -11, Color.WHITE.getRGB());
 
-            drawRect(-1, -1, 161, 161, Color.WHITE.getRGB());
-            drawRect(0, 0, 160, 160, Color.BLACK.getRGB());
-            GlStateManager.color(1, 1, 1);
+            fill(-1, -1, 161, 161, Color.WHITE.getRGB());
+            fill(0, 0, 160, 160, Color.BLACK.getRGB());
+            GlStateManager.color3f(1, 1, 1);
 
             int mask = shape.getShapeMask();
             int off = shape.getReticle();
 
-            GlStateManager.translate(160, 160, 0);
+            GlStateManager.translatef(160, 160, 0);
             for(int x = 0; x < 5; ++x)
             {
                 for(int y = 0; y < 5; ++y)
@@ -101,69 +102,79 @@ public class ShapeSelectionScreen extends GuiScreen {
                     int flag = ExcavateShape.posToMask(x, y);
                     if((mask & flag) != flag)
                     {
-                        this.mc.renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+                        minecraft.getRenderManager().textureManager.bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
                         GlStateManager.pushMatrix();
-                        GlStateManager.scale(-2.0F, -2.0F, 0F);
-                        GlStateManager.translate((float) (x * 16), (float) (y * 16), 0.0F);
-                        this.drawTexturedModalRect(0, 0, this.mc.getTextureMapBlocks().getAtlasSprite("minecraft:blocks/stone"), 16, 16);
+                        GlStateManager.scalef(-2.0F, -2.0F, 0F);
+                        GlStateManager.translatef((float) (x * 16), (float) (y * 16), 0.0F);
+                        blit(0, 0, 100, 16, 16, minecraft.getTextureMap().getAtlasSprite("minecraft:block/stone"));
                         GlStateManager.popMatrix();
                     }
 
                     if(off == y * 5 + x)
                     {
-                        this.mc.renderEngine.bindTexture(ICONS);
+                        minecraft.getTextureManager().bindTexture(GUI_ICONS_LOCATION);
                         GlStateManager.pushMatrix();
-                        GlStateManager.scale(-2.0F, -2.0F, 1.0F);
-                        GlStateManager.translate((float) (x * 16), (float) (y * 16), 0.0F);
-                        this.drawTexturedModalRect(0, 0, 0, 0, 16, 16);
+                        GlStateManager.scalef(-2.0F, -2.0F, 1.0F);
+                        GlStateManager.translatef((float) (x * 16), (float) (y * 16), 0.0F);
+                        blit(0, 0, 0, 0, 16, 16);
                         GlStateManager.popMatrix();
                     }
                 }
             }
             GlStateManager.popMatrix();
         } else {
-            drawCenteredString(mc.fontRenderer, I18n.format(ShapeSelector.MODID + ".noshape"), width / 2, height / 2, Color.WHITE.getRGB());
+            drawCenteredString(font, I18n.format(ShapeSelector.MODID + ".noshape"), width / 2, height / 2, Color.WHITE.getRGB());
         }
 
-        drawCenteredString(mc.fontRenderer, I18n.format(ShapeSelector.MODID + ".tip"), width / 2, height - 40, Color.YELLOW.getRGB());
+        drawCenteredString(font, I18n.format(ShapeSelector.MODID + ".tip"), width / 2, height - 40, Color.YELLOW.getRGB());
 
-        super.drawScreen(mx, my, partialTicks);
+        super.render(mx, my, partialTicks);
     }
 
     @Override
-    public void updateScreen() {
-        if (!GameSettings.isKeyDown(ShapeSelector.shapeSelector)) {
+    public boolean keyReleased(int key, int scancode, int modifiers) {
+        if (ExcavationKeys.shapeKey.matchesKey(key, scancode)) {
             if (registry.getActiveShape() != null)
                 registry.getActiveShape().setMaxDepth(ShapeSelector.depth);
-            mc.displayGuiScreen(null);
+//            minecraft.displayGuiScreen(null);
+            return true;
         }
+        return false;
+    }
 
-        ImmutableSet<KeyBinding> set = ImmutableSet.of(mc.gameSettings.keyBindForward, mc.gameSettings.keyBindLeft, mc.gameSettings.keyBindBack, mc.gameSettings.keyBindRight, mc.gameSettings.keyBindSneak, mc.gameSettings.keyBindSprint, mc.gameSettings.keyBindJump);
+    @Override
+    public void tick() {
+        ImmutableSet<KeyBinding> set = ImmutableSet.of(minecraft.gameSettings.keyBindForward, minecraft.gameSettings.keyBindLeft, minecraft.gameSettings.keyBindBack, minecraft.gameSettings.keyBindRight, minecraft.gameSettings.keyBindSneak, minecraft.gameSettings.keyBindSprint, minecraft.gameSettings.keyBindJump);
         for (KeyBinding k : set)
-            KeyBinding.setKeyBindState(k.getKeyCode(), GameSettings.isKeyDown(k));
-
-        if (cooldown <= 0) {
-                int dir = MathHelper.clamp(Mouse.getDWheel(), -1, 1);
-                if (dir != 0)
-                {
-                    int curIdx = registry.getShapeList().indexOf(registry.getActiveShape());
-
-                    curIdx += dir;
-
-                    if(curIdx < 0)
-                        curIdx = registry.getShapeList().size() - 1;
-                    if(curIdx >= registry.getShapeList().size())
-                        curIdx = 0;
-
-                    ShapeSelector.setShape(curIdx + 1);
-                    cooldown = 3;
-                }
-        }
+            KeyBinding.setKeyBindState(k.getKey(), k.isPressed());
         cooldown--;
     }
 
     @Override
-    public boolean doesGuiPauseGame() {
+    public boolean mouseScrolled(double p_mouseScrolled_1_, double p_mouseScrolled_3_, double p_mouseScrolled_5_) {
+
+        if (cooldown <= 0) {
+            double dir = MathHelper.clamp(p_mouseScrolled_5_, -1, 1);
+            if (dir != 0)
+            {
+                int curIdx = registry.getShapeList().indexOf(registry.getActiveShape());
+
+                curIdx += dir;
+
+                if(curIdx < 0)
+                    curIdx = registry.getShapeList().size() - 1;
+                if(curIdx >= registry.getShapeList().size())
+                    curIdx = 0;
+
+                ShapeSelector.setShape(curIdx + 1);
+                cooldown = 3;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean isPauseScreen() {
         return false;
     }
 }

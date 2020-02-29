@@ -4,7 +4,8 @@ import com.google.common.collect.ImmutableSet;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SoundHandler;
-import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.client.gui.widget.button.Button;
 import net.minecraftforge.fml.client.config.GuiSlider;
 
 import java.awt.Color;
@@ -15,14 +16,15 @@ public class GuiSliderInt extends GuiSlider {
     private int colorBackground, colorSliderBackground, colorSlider;
     private BiConsumer<GuiSliderInt, Integer> increment;
     private int value;
+    private Minecraft minecraft;
 
-    public GuiSliderInt(int xPos, int yPos, int width, int height, String prefix, String suf, double minVal, double maxVal,
-            double currentVal, boolean showDec, boolean drawStr, Color color, ISlider par, BiConsumer<GuiSliderInt, Integer> increment) {
-        super(0, xPos, yPos, width, height, prefix, suf, minVal, maxVal, currentVal, showDec, drawStr, par);
+    public GuiSliderInt(int xPos, int yPos, int width, int height, String prefix, String suf, double minVal, double maxVal, double currentVal, boolean showDec, boolean drawStr, Color color, IPressable par, BiConsumer<GuiSliderInt, Integer> increment, Minecraft minecraft) {
+        super(xPos, yPos, width, height, prefix, suf, minVal, maxVal, currentVal, showDec, drawStr, par);
         colorBackground = getColor(color, 200).getRGB();
         colorSliderBackground = getColor(color.darker(), 200).getRGB();
         colorSlider = getColor(color.brighter().brighter(), 200).getRGB();
         this.increment = increment;
+        this.minecraft = minecraft;
     }
 
     private Color getColor(Color color, int alpha) {
@@ -30,8 +32,8 @@ public class GuiSliderInt extends GuiSlider {
     }
 
     @Override
-    public void mouseReleased(int mouseX, int mouseY) {
-        super.mouseReleased(mouseX, mouseY);
+    public void onRelease(double mouseX, double mouseY) {
+        super.onRelease(mouseX, mouseY);
         setValue(getValueInt());
     }
 
@@ -45,80 +47,50 @@ public class GuiSliderInt extends GuiSlider {
     }
 
     @Override
-    public void drawButton(Minecraft mc, int mouseX, int mouseY, float partial) {
+    public void renderButton(int mouseX, int mouseY, float partial) {
         if (!visible)
             return;
 
-        hovered = mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;
-        drawRect(x, y, x + width, y + height, colorBackground);
-        mouseDragged(mc, mouseX, mouseY);
-        renderText(mc, this);
+        isHovered = mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;
+        fill(x, y, x + width, y + height, colorBackground);
+        drawBorderedRect(x + (int) (sliderValue * (width - 8)), y, 8, height);
+        renderText(minecraft, this);
     }
 
-    private void renderText(Minecraft mc, GuiButton component) {
-        int color = !enabled ? 10526880 : (hovered ? 16777120 : -1);
-        String buttonText = component.displayString;
+    private void renderText(Minecraft mc, Widget component) {
+        int color = !active ? 10526880 : (isHovered ? 16777120 : -1);
+        String buttonText = component.getMessage();
         int strWidth = mc.fontRenderer.getStringWidth(buttonText);
         int ellipsisWidth = mc.fontRenderer.getStringWidth("...");
-        if (strWidth > component.width - 6 && strWidth > ellipsisWidth)
-            buttonText = mc.fontRenderer.trimStringToWidth(buttonText, component.width - 6 - ellipsisWidth).trim() + "...";
+        if (strWidth > component.getWidth() - 6 && strWidth > ellipsisWidth)
+            buttonText = mc.fontRenderer.trimStringToWidth(buttonText, component.getWidth() - 6 - ellipsisWidth).trim() + "...";
 
-        drawCenteredString(mc.fontRenderer, buttonText, component.x + component.width / 2, component.y + (component.height - 8) / 2, color);
+        drawCenteredString(mc.fontRenderer, buttonText, component.x + component.getWidth() / 2, component.y + (component.getHeight() - 8) / 2, color);
     }
 
     @Override
-    public void playPressSound(SoundHandler soundHandlerIn) {}
+    public void playDownSound(SoundHandler p_playDownSound_1_) {}
 
     @Override
-    protected void mouseDragged(Minecraft mc, int mouseX, int mouseY) {
+    public boolean mouseDragged(double mouseX, double p_mouseDragged_3_, int p_mouseDragged_5_, double p_mouseDragged_6_, double p_mouseDragged_8_) {
         if (!visible)
-            return;
+            return false;
 
         if (dragging) {
             sliderValue = (mouseX - (x + 4)) / (float) (width - 8);
             updateSlider();
         }
-        drawBorderedRect(x + (int) (sliderValue * (width - 8)), y, 8, height);
+        return true;
     }
 
     private void drawBorderedRect(int x, int y, int width, int height) {
-        drawRect(x, y, x + width, y + height, colorSliderBackground);
-        drawRect(++x, ++y, x + width - 2, y + height - 2, colorSlider); 
+        fill(x, y, x + width, y + height, colorSliderBackground);
+        fill(++x, ++y, x + width - 2, y + height - 2, colorSlider);
     }
 
-    public Collection<GuiButton> getComponents() {
+    public Collection<Widget> getComponents() {
         return ImmutableSet.of(this,
-                new GuiButtonIncrement(this, x - height, y, height, height, "-", () -> increment.accept(this, -1)),
-                new GuiButtonIncrement(this, x + width, y, height, height, "+", () -> increment.accept(this, 1)));
-    }
-
-    private static class GuiButtonIncrement extends GuiButton {
-        private GuiSliderInt parent;
-        private ActionPressed action;
-
-        public GuiButtonIncrement(GuiSliderInt parent, int x, int y, int width, int height, String buttonText, Runnable action) {
-            super(0, x, y, width, height, buttonText);
-            this.parent = parent;
-            this.action = new ActionPressed(action);
-        }
-
-        @Override
-        public void drawButton(Minecraft mc, int mouseX, int mouseY, float partial) {
-            if (!visible)
-                return;
-
-            hovered = mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;
-            drawRect(x, y, x + width, y + height, parent.colorBackground);
-            parent.drawBorderedRect(x, y, width, height);
-            parent.renderText(mc, this);
-        }
-
-        @Override
-        public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
-            return action.pressed(super.mousePressed(mc, mouseX, mouseY));
-        }
-
-        @Override
-        public void playPressSound(SoundHandler soundHandlerIn) {}
+                new Button(x - height, y, height, height, "-", btn -> increment.accept(this, -1)),
+                new Button(x + width, y, height, height, "+", btn -> increment.accept(this, 1)));
     }
 }
