@@ -99,7 +99,7 @@ curseforge {
     project {
         id = '365014'
         changelog = file("CHANGELOG.md")
-        changelogType = markdown
+        changelogType = 'markdown'
         releaseType = 'release'
         addGameVersion '1.15.2'
         relations {
@@ -112,9 +112,10 @@ curseforge {
 }
 
 task generateGitChangelog(type: GitChangelogTask) {
-    gitHubApi = "https://api.github.com/repos/FusionLord/OreExcavation-ShapeSelector"
+    gitHubApi = "https://api.github.com/repos/FusionLord/OreExcavation-ShapeSelector/"
     gitHubToken = "$System.env.GITHUB_OAUTH2TOKEN"
     gitHubIssuePattern = "#([0-9]*)"
+
     file = new File("CHANGELOG.md")
     templateContent = file('changelog.mustache').getText('UTF-8')
 }
