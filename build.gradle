@@ -2,19 +2,24 @@ buildscript {
     repositories {
         maven { url = 'https://files.minecraftforge.net/maven' }
         maven { url = 'https://minecraft.curseforge.com/api/maven/' }
+        maven { url = 'https://plugins.gradle.org/m2/' }
         jcenter()
         mavenCentral()
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath "gradle.plugin.com.matthewprenger:CurseGradle:1.4.0"
+        classpath "se.bjurr.gitchangelog:git-changelog-gradle-plugin:+"
     }
 }
 apply plugin: 'net.minecraftforge.gradle'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply plugin: "com.matthewprenger.cursegradle"
+apply plugin: 'se.bjurr.gitchangelog.git-changelog-gradle-plugin'
 
-version = '1.0'
+version = '1.14.4-1.0'
 group = 'net.fusionlord.mods.oreexcavation' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'shapeselector'
 
@@ -86,6 +91,33 @@ minecraft {
     }
 }
 
+curseforge {
+    apiKey = "$System.env.CURSEFORGE_TOKEN"
+    curseProjects.each { it.uploadTask.dependsOn("generateGitChagnelog") }
+    project {
+        id = '365014'
+        changelog = file("CHANGELOG.md")
+        changelogType = 'markdown'
+        releaseType = 'release'
+        addGameVersion '1.14.4'
+        relations {
+            requiredDependency 'ore-excavation'
+        }
+
+        mainArtifact jar
+//        addArtifact sourcesJar
+    }
+}
+
+task generateGitChangelog(type: GitChangelogTask) {
+    gitHubApi = "https://api.github.com/repos/FusionLord/OreExcavation-ShapeSelector/"
+    gitHubToken = "$System.env.GITHUB_OAUTH2TOKEN"
+    gitHubIssuePattern = "#([0-9]*)"
+
+    file = new File("CHANGELOG.md")
+    templateContent = file('changelog.mustache').getText('UTF-8')
+}
+
 repositories {
     jcenter()
     maven {
@@ -127,13 +159,13 @@ dependencies {
 jar {
     manifest {
         attributes([
-            "Specification-Title": "examplemod",
-            "Specification-Vendor": "examplemodsareus",
-            "Specification-Version": "1", // We are version 1 of ourselves
-            "Implementation-Title": project.name,
-            "Implementation-Version": "${version}",
-            "Implementation-Vendor" :"examplemodsareus",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                "Specification-Title": "Ore-Excavator: Shape Selector",
+                "Specification-Vendor": "oeshapeselector",
+                "Specification-Version": "1", // We are version 1 of ourselves
+                "Implementation-Title": project.name,
+                "Implementation-Version": "${version}",
+                "Implementation-Vendor" :"oeshapeselector",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
 }
