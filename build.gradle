@@ -1,3 +1,5 @@
+import se.bjurr.gitchangelog.plugin.gradle.GitChangelogTask
+
 buildscript {
     repositories {
         maven { url = 'https://files.minecraftforge.net/maven' }
