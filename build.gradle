@@ -21,7 +21,33 @@ apply plugin: 'maven-publish'
 apply plugin: "com.matthewprenger.cursegradle"
 apply plugin: 'se.bjurr.gitchangelog.git-changelog-gradle-plugin'
 
-version = '1.0'
+def versionPropsFile = file('version.properties')
+def versionBuild
+
+/*Setting default value for versionBuild which is the last incremented value stored in the file */
+if (versionPropsFile.canRead()) {
+    Properties versionProps = new Properties()
+    versionProps.load(new FileInputStream(versionPropsFile))
+    versionBuild = versionProps['VERSION_BUILD'].toInteger()
+} else {
+    throw new FileNotFoundException("Could not read version.properties!")
+}
+
+ext.autoIncrementBuildNumber = {
+    if (versionPropsFile.canRead()) {
+        Properties versionProps = new Properties()
+        versionProps.load(new FileInputStream(versionPropsFile))
+        versionBuild = versionProps['VERSION_BUILD'].toInteger() + 1
+        versionProps['VERSION_BUILD'] = versionBuild.toString()
+        versionProps.store(versionPropsFile.newWriter(), null)
+    } else {
+        throw new FileNotFoundException("Could not read version.properties!")
+    }
+}
+
+tasks.build.doLast { autoIncrementBuildNumber() }
+
+version = '1.15.2b' + versionBuild
 group = 'net.fusionlord.mods.oreexcavation' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'shapeselector'
 
