@@ -88,37 +88,14 @@ public class GuiSliderInt extends GuiSlider {
 
     public Collection<GuiButton> getComponents() {
         return ImmutableSet.of(this,
-                new GuiButtonIncrement(this, x - height, y, height, height, "-", () -> increment.accept(this, -1)),
-                new GuiButtonIncrement(this, x + width, y, height, height, "+", () -> increment.accept(this, 1)));
-    }
-
-    private static class GuiButtonIncrement extends GuiButton {
-        private GuiSliderInt parent;
-        private ActionPressed action;
-
-        public GuiButtonIncrement(GuiSliderInt parent, int x, int y, int width, int height, String buttonText, Runnable action) {
-            super(0, x, y, width, height, buttonText);
-            this.parent = parent;
-            this.action = new ActionPressed(action);
-        }
-
-        @Override
-        public void drawButton(Minecraft mc, int mouseX, int mouseY, float partial) {
-            if (!visible)
-                return;
-
-            hovered = mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;
-            drawRect(x, y, x + width, y + height, parent.colorBackground);
-            parent.drawBorderedRect(x, y, width, height);
-            parent.renderText(mc, this);
-        }
-
-        @Override
-        public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
-            return action.pressed(super.mousePressed(mc, mouseX, mouseY));
-        }
-
-        @Override
-        public void playPressSound(SoundHandler soundHandlerIn) {}
+                new ActionButton(0, x - height, y, height, height, "-", (send) -> {
+                    if (send) increment.accept(this, 1);
+                    return send;
+                }),
+                new ActionButton(0, x + width, y, height, height, "+", (send) -> {
+                    if (send) increment.accept(this, 1);
+                    return send;
+                })
+        );
     }
 }

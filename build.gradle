@@ -1,19 +1,53 @@
+import se.bjurr.gitchangelog.plugin.gradle.GitChangelogTask
+
 buildscript {
     repositories {
+        maven { url = 'https://files.minecraftforge.net/maven' }
+        maven { url = 'https://minecraft.curseforge.com/api/maven/' }
+        maven { url = 'https://plugins.gradle.org/m2/' }
         jcenter()
-        maven { url = "http://files.minecraftforge.net/maven" }
+        mavenCentral()
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '2.3-SNAPSHOT'
+        classpath "gradle.plugin.com.matthewprenger:CurseGradle:1.4.0"
+        classpath "se.bjurr.gitchangelog:git-changelog-gradle-plugin:+"
     }
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
+apply plugin: 'com.matthewprenger.cursegradle'
+apply plugin: 'se.bjurr.gitchangelog.git-changelog-gradle-plugin'
 
+def versionPropsFile = file('version.properties')
+def versionBuild
 
-version = "1.0"
-group = "com.yourname.modid" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "modid"
+/*Setting default value for versionBuild which is the last incremented value stored in the file */
+if (versionPropsFile.canRead()) {
+    Properties versionProps = new Properties()
+    versionProps.load(new FileInputStream(versionPropsFile))
+    versionBuild = versionProps['VERSION_BUILD'].toInteger()
+} else {
+    throw new FileNotFoundException("Could not read version.properties!")
+}
+
+ext.autoIncrementBuildNumber = {
+    if (versionPropsFile.canRead()) {
+        Properties versionProps = new Properties()
+        versionProps.load(new FileInputStream(versionPropsFile))
+        versionBuild = versionProps['VERSION_BUILD'].toInteger() + 1
+        versionProps['VERSION_BUILD'] = versionBuild.toString()
+        versionProps.store(versionPropsFile.newWriter(), null)
+    } else {
+        throw new FileNotFoundException("Could not read version.properties!")
+    }
+}
+
+tasks.build.doLast { autoIncrementBuildNumber() }
+
+version = "1.12.2b" + versionBuild
+group = "net.fusionlord.mods.oreexcavation.shapeselector" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "shapeselector"
 
 sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 compileJava {
@@ -33,28 +67,31 @@ minecraft {
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 
-dependencies {
-    // you may put jars on which you depend on in ./libs
-    // or you may define them like so..
-    //compile "some.group:artifact:version:classifier"
-    //compile "some.group:artifact:version"
+curseforge {
+    apiKey = "$System.env.CURSEFORGE_TOKEN"
+    curseProjects.each { it.uploadTask.dependsOn("generateGitChagnelog") }
+    project {
+        id = '365014'
+        changelog = file("CHANGELOG.md")
+        changelogType = 'markdown'
+        releaseType = 'release'
+        addGameVersion '1.12.2'
+        relations {
+            requiredDependency 'ore-excavation'
+        }
 
-    // real examples
-    //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
-    //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
+        mainArtifact jar
+//        addArtifact sourcesJar
+    }
+}
 
-    // the 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
-    //provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
+task changelog(type: GitChangelogTask) {
+    gitHubApi = "https://api.github.com/repos/FusionLord/OreExcavation-ShapeSelector/"
+    gitHubToken = "$System.env.GITHUB_OAUTH2TOKEN"
+    gitHubIssuePattern = "#([0-9]*)"
 
-    // the deobf configurations:  'deobfCompile' and 'deobfProvided' are the same as the normal compile and provided,
-    // except that these dependencies get remapped to your current MCP mappings
-    //deobfCompile 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-    //deobfProvided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-
-    // for more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
-
+    file = new File("CHANGELOG.md")
+    templateContent = file('changelog.mustache').getText('UTF-8')
 }
 
 repositories {
