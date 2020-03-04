@@ -152,6 +152,10 @@ repositories {
         name = "CurseForge"
         url = "https://minecraft.curseforge.com/api/maven/"
     }
+    maven {
+        name = "jitpack.io"
+        url = "https://jitpack.io"
+    }
 }
 
 
@@ -161,7 +165,8 @@ dependencies {
     // The userdev artifact is a special name and will get all sorts of transformations applied to it.
     minecraft 'net.minecraftforge:forge:1.14.4-28.2.0'
 
-    compile fg.deobf('ore-excavation:OreExcavation:1.6.145')
+    implementation fg.deobf('com.github.Funwayguy:OreExcavation:1.14-SNAPSHOT')
+
 
     // You may put jars on which you depend on in ./libs or you may define them like so..
     // compile "some.group:artifact:version:classifier"
